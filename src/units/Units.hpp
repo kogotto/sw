@@ -12,6 +12,7 @@ using Unit = std::variant<Warrior, Archer>;
 
 class Units {
 public:
+    void removeDead();
 private:
     std::vector<Unit> units;
 };
