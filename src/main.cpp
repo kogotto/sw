@@ -1,13 +1,20 @@
 #include <iostream>
 #include <fstream>
+
 #include <IO/System/CommandParser.hpp>
 #include <IO/System/PrintDebug.hpp>
+
 #include <IO/Commands/CreateMap.hpp>
 #include <IO/Commands/SpawnWarrior.hpp>
 #include <IO/Commands/SpawnArcher.hpp>
 #include <IO/Commands/March.hpp>
 #include <IO/Commands/Wait.hpp>
+#include <IO/Commands/Command.hpp>
+#include <IO/Commands/Commands.hpp>
+#include <IO/Commands/CommandsStream.hpp>
+
 #include <IO/System/EventLog.hpp>
+
 #include <IO/Events/MapCreated.hpp>
 #include <IO/Events/UnitSpawned.hpp>
 #include <IO/Events/MarchStarted.hpp>
@@ -16,6 +23,37 @@
 #include <IO/Events/UnitDied.hpp>
 #include <IO/Events/UnitAttacked.hpp>
 
+namespace sw {
+
+void applyCommand(int tickNumber, const io::Command& command) {
+    std::cout << "    [" << tickNumber << "] apply command " <<
+        command << std::endl;
+}
+
+bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream) {
+    for (auto command = stream.fetch(); command; command = stream.fetch()) {
+        if (isWaitCommand(*command)) {
+            return true;
+        }
+        applyCommand(tickNumber, *command);
+    }
+    return false;
+}
+
+bool tick(int tickNumber, io::CommandsStream& stream) {
+    return applyCommandsForThisTick(tickNumber, stream);
+}
+
+void mainLoop(const io::Commands& commands) {
+    io::CommandsStream stream{commands};
+    for (int i = 0; ; ++i) {
+        if (!tick(i, stream)) {
+            break;
+        }
+    }
+}
+
+} // namespace sw
 
 int main(int argc, char** argv)
 {
@@ -30,33 +68,8 @@ int main(int argc, char** argv)
 		throw std::runtime_error("Error: File not found - " + std::string(argv[1]));
 	}
 
-	// Code for example...
-
-	std::cout << "Commands:\n";
-	io::CommandParser parser;
-	parser.add<io::CreateMap>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::SpawnWarrior>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::SpawnArcher>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::March>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		}).add<io::Wait>(
-		[](auto command)
-		{
-			printDebug(std::cout, command);
-		});
-
-	parser.parse(file);
+    const auto commands = io::parseCommands(file);
+    mainLoop(commands);
 
 	std::cout << "\n\nEvents:\n";
 
