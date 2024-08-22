@@ -25,29 +25,47 @@
 
 namespace sw {
 
-void applyCommand(int tickNumber, const io::Command& command) {
-    std::cout << "    [" << tickNumber << "] apply command " <<
-        command << std::endl;
+template <typename... Ts>
+struct Overload : Ts... {
+    using Ts::operator()...;
+};
+template <typename... Ts>
+Overload(Ts...) -> Overload<Ts...>;
+
+void applyCommand(int tickNumber, const io::Command& command, sw::EventLog& eventLog) {
+    std::visit(
+        Overload{
+            [&] (const auto& command) {
+                std::cout << "    [" << tickNumber << "] apply command " <<
+                    command << std::endl;
+            },
+            [&] (const io::CreateMap& createMap) {
+                eventLog.log(tickNumber, sw::io::MapCreated{createMap.width, createMap.height});
+            }
+        },
+        command
+    );
 }
 
-bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream) {
+bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream, sw::EventLog& eventLog) {
     for (auto command = stream.fetch(); command; command = stream.fetch()) {
         if (isWaitCommand(*command)) {
             return true;
         }
-        applyCommand(tickNumber, *command);
+        applyCommand(tickNumber, *command, eventLog);
     }
     return false;
 }
 
-bool tick(int tickNumber, io::CommandsStream& stream) {
-    return applyCommandsForThisTick(tickNumber, stream);
+bool tick(int tickNumber, io::CommandsStream& stream, sw::EventLog& eventLog) {
+    return applyCommandsForThisTick(tickNumber, stream, eventLog);
 }
 
 void mainLoop(const io::Commands& commands) {
     io::CommandsStream stream{commands};
+    EventLog eventLog;
     for (int i = 0; ; ++i) {
-        if (!tick(i, stream)) {
+        if (!tick(i, stream, eventLog)) {
             break;
         }
     }
