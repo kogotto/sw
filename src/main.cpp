@@ -32,6 +32,10 @@ struct Overload : Ts... {
 template <typename... Ts>
 Overload(Ts...) -> Overload<Ts...>;
 
+void processCreateMap(int tickNumber, io::CreateMap command, sw::EventLog& eventLog) {
+    eventLog.log(tickNumber, sw::io::MapCreated{command.width, command.height});
+}
+
 void applyCommand(int tickNumber, const io::Command& command, sw::EventLog& eventLog) {
     std::visit(
         Overload{
@@ -39,8 +43,8 @@ void applyCommand(int tickNumber, const io::Command& command, sw::EventLog& even
                 std::cout << "    [" << tickNumber << "] apply command " <<
                     command << std::endl;
             },
-            [&] (const io::CreateMap& createMap) {
-                eventLog.log(tickNumber, sw::io::MapCreated{createMap.width, createMap.height});
+            [&] (const io::CreateMap& command) {
+                processCreateMap(tickNumber, command, eventLog);
             }
         },
         command
