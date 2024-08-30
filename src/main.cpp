@@ -23,6 +23,8 @@
 #include <IO/Events/UnitDied.hpp>
 #include <IO/Events/UnitAttacked.hpp>
 
+#include <units/Units.hpp>
+
 namespace sw {
 
 template <typename... Ts>
@@ -36,7 +38,18 @@ void processCreateMap(int tickNumber, io::CreateMap command, sw::EventLog& event
     eventLog.log(tickNumber, sw::io::MapCreated{command.width, command.height});
 }
 
-void applyCommand(int tickNumber, const io::Command& command, sw::EventLog& eventLog) {
+void processSpawnWarrior(int tickNumber, io::SpawnWarrior command, sw::Units& units, sw::EventLog& eventLog) {
+    sw::io::UnitSpawned data{
+        command.unitId,
+        "Warrior",
+        command.x,
+        command.y
+    };
+    units.spawn(sw::Warrior{command.unitId, command.hp, command.strength});
+    eventLog.log(tickNumber, std::move(data));
+}
+
+void applyCommand(int tickNumber, const io::Command& command, sw::Units& units, sw::EventLog& eventLog) {
     std::visit(
         Overload{
             [&] (const auto& command) {
@@ -45,31 +58,35 @@ void applyCommand(int tickNumber, const io::Command& command, sw::EventLog& even
             },
             [&] (const io::CreateMap& command) {
                 processCreateMap(tickNumber, command, eventLog);
+            },
+            [&] (const io::SpawnWarrior& command) {
+                processSpawnWarrior(tickNumber, command, units, eventLog);
             }
         },
         command
     );
 }
 
-bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream, sw::EventLog& eventLog) {
+bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream, sw::Units& units, sw::EventLog& eventLog) {
     for (auto command = stream.fetch(); command; command = stream.fetch()) {
         if (isWaitCommand(*command)) {
             return true;
         }
-        applyCommand(tickNumber, *command, eventLog);
+        applyCommand(tickNumber, *command, units, eventLog);
     }
     return false;
 }
 
-bool tick(int tickNumber, io::CommandsStream& stream, sw::EventLog& eventLog) {
-    return applyCommandsForThisTick(tickNumber, stream, eventLog);
+bool tick(int tickNumber, io::CommandsStream& stream, sw::Units& units, sw::EventLog& eventLog) {
+    return applyCommandsForThisTick(tickNumber, stream, units, eventLog);
 }
 
 void mainLoop(const io::Commands& commands) {
     io::CommandsStream stream{commands};
     EventLog eventLog;
+    Units units;
     for (int i = 0; ; ++i) {
-        if (!tick(i, stream, eventLog)) {
+        if (!tick(i, stream, units, eventLog)) {
             break;
         }
     }
