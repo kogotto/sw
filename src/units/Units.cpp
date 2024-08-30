@@ -4,6 +4,8 @@
 
 namespace sw {
 
+namespace {
+
 bool isDead(const Unit& unit) {
     return std::visit(
         [] (const auto& unit) {
@@ -12,6 +14,8 @@ bool isDead(const Unit& unit) {
         unit
     );
 }
+
+} // namespace
 
 void Units::removeDead() {
     units.erase(
