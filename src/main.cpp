@@ -27,6 +27,35 @@
 
 namespace sw {
 
+class Context {
+public:
+    Context(sw::Units& units, sw::EventLog& eventLog)
+        : _units{units}
+        , _eventLog{eventLog}
+    {}
+
+    int getTickNumber() const { return _tickNumber; }
+    void setTickNumber(int newNumber) { _tickNumber = newNumber; }
+
+    sw::Units& units() { return _units; }
+    const sw::Units& units() const { return _units; }
+
+    sw::EventLog& eventLog() { return _eventLog; }
+    const sw::EventLog& eventLog() const { return _eventLog; }
+
+    template <typename TEvent>
+    void log(TEvent&& event) {
+        eventLog().log(
+            getTickNumber(),
+            event
+        );
+    }
+private:
+    int _tickNumber{0};
+    sw::Units& _units;
+    sw::EventLog& _eventLog;
+};
+
 template <typename... Ts>
 struct Overload : Ts... {
     using Ts::operator()...;
@@ -34,59 +63,65 @@ struct Overload : Ts... {
 template <typename... Ts>
 Overload(Ts...) -> Overload<Ts...>;
 
-void processCreateMap(int tickNumber, io::CreateMap command, sw::EventLog& eventLog) {
-    eventLog.log(tickNumber, sw::io::MapCreated{command.width, command.height});
+void processCreateMap(io::CreateMap command, Context& context) {
+    context.log(
+        sw::io::MapCreated{command.width, command.height}
+    );
 }
 
-void processSpawnWarrior(int tickNumber, io::SpawnWarrior command, sw::Units& units, sw::EventLog& eventLog) {
-    sw::io::UnitSpawned data{
+void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
+    context.units().spawn(
+        sw::Warrior{command.unitId, command.hp, command.strength}
+    );
+
+    context.log(sw::io::UnitSpawned{
         command.unitId,
         "Warrior",
         command.x,
         command.y
-    };
-    units.spawn(sw::Warrior{command.unitId, command.hp, command.strength});
-    eventLog.log(tickNumber, std::move(data));
+    });
 }
 
-void applyCommand(int tickNumber, const io::Command& command, sw::Units& units, sw::EventLog& eventLog) {
+void applyCommand(const io::Command& command, Context& context) {
     std::visit(
         Overload{
             [&] (const auto& command) {
-                std::cout << "    [" << tickNumber << "] apply command " <<
+                std::cout << "    [" << context.getTickNumber() << "] apply command " <<
                     command << std::endl;
             },
             [&] (const io::CreateMap& command) {
-                processCreateMap(tickNumber, command, eventLog);
+                processCreateMap(command, context);
             },
             [&] (const io::SpawnWarrior& command) {
-                processSpawnWarrior(tickNumber, command, units, eventLog);
+                processSpawnWarrior(command, context);
             }
         },
         command
     );
 }
 
-bool applyCommandsForThisTick(int tickNumber, io::CommandsStream& stream, sw::Units& units, sw::EventLog& eventLog) {
+bool applyCommandsForThisTick(io::CommandsStream& stream, Context& context) {
     for (auto command = stream.fetch(); command; command = stream.fetch()) {
         if (isWaitCommand(*command)) {
             return true;
         }
-        applyCommand(tickNumber, *command, units, eventLog);
+        applyCommand(*command, context);
     }
     return false;
 }
 
-bool tick(int tickNumber, io::CommandsStream& stream, sw::Units& units, sw::EventLog& eventLog) {
-    return applyCommandsForThisTick(tickNumber, stream, units, eventLog);
+bool tick(io::CommandsStream& stream, Context& context) {
+    return applyCommandsForThisTick(stream, context);
 }
 
 void mainLoop(const io::Commands& commands) {
     io::CommandsStream stream{commands};
     EventLog eventLog;
     Units units;
+    Context context{units, eventLog};
     for (int i = 0; ; ++i) {
-        if (!tick(i, stream, units, eventLog)) {
+        context.setTickNumber(i);
+        if (!tick(stream, context)) {
             break;
         }
     }
