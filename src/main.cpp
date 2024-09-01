@@ -82,6 +82,24 @@ void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
     });
 }
 
+void processSpawnArcher(io::SpawnArcher command, Context& context) {
+    context.units().spawn(
+        sw::Archer{
+            command.unitId,
+            command.hp,
+            command.strength,
+            command.range,
+            command.agility
+    });
+
+    context.log(sw::io::UnitSpawned{
+        command.unitId,
+        "Archer",
+        command.x,
+        command.y
+    });
+}
+
 void processMarch(io::March command, Context& context) {
     // get unit by id
     // order him to march
@@ -107,6 +125,9 @@ void applyCommand(const io::Command& command, Context& context) {
             },
             [&] (const io::SpawnWarrior& command) {
                 processSpawnWarrior(command, context);
+            },
+            [&] (const io::SpawnArcher& command) {
+                processSpawnArcher(command, context);
             },
             [&] (const io::March& command) {
                 processMarch(command, context);
