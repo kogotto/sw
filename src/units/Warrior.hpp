@@ -2,16 +2,18 @@
 
 #include <cstdint>
 
+#include "units/base.hpp"
+
 namespace sw {
 
-class Warrior {
+class Warrior : public Base {
 public:
-    bool isDead() const {
-        return _hp == 0;
-    }
+    Warrior(uint32_t id, uint32_t hp, uint32_t x, uint32_t y,
+            uint32_t strength)
+        : Base{id, hp, x, y}
+        , _strength{strength}
+    {}
 
-    uint32_t _id;
-    uint32_t _hp;
     uint32_t _strength;
 };
 

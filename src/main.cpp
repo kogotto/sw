@@ -71,7 +71,13 @@ void processCreateMap(io::CreateMap command, Context& context) {
 
 void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
     context.units().spawn(
-        sw::Warrior{command.unitId, command.hp, command.strength}
+        sw::Warrior{
+            command.unitId,
+            command.hp,
+            command.x,
+            command.y,
+            command.strength
+        }
     );
 
     context.log(sw::io::UnitSpawned{
@@ -87,6 +93,8 @@ void processSpawnArcher(io::SpawnArcher command, Context& context) {
         sw::Archer{
             command.unitId,
             command.hp,
+            command.x,
+            command.y,
             command.strength,
             command.range,
             command.agility
@@ -101,13 +109,12 @@ void processSpawnArcher(io::SpawnArcher command, Context& context) {
 }
 
 void processMarch(io::March command, Context& context) {
-    // get unit by id
+    const auto& unit = asBase(context.units().getById(command.unitId));
     // order him to march
-    // get x,y of unit for log
     context.log(sw::io::MarchStarted{
         command.unitId,
-        0,
-        0,
+        unit._x,
+        unit._y,
         command.targetX,
         command.targetY
     });
