@@ -5,6 +5,8 @@
 #include <unordered_map>
 #include <type_traits>
 
+#include "IO/System/details/PrintFieldVisitor.hpp"
+
 namespace sw
 {
 	class EventLog {
