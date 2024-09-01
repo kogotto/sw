@@ -11,6 +11,23 @@
 namespace sw {
 namespace {
 
+bool applyUnitMove(Unit& unit, Context& context) {
+    return std::visit(
+        [&] (auto&& unit) {
+            return processUnit(unit, context);
+        },
+        unit
+    );
+}
+
+bool applyUnitMovesForThisTick(Context& context) {
+    bool anotherMoves = false;
+    for (auto&& unit : context.units()) {
+        anotherMoves = applyUnitMove(unit, context) || anotherMoves;
+    }
+    return anotherMoves;
+}
+
 void applyCommand(const io::Command& command, Context& context) {
     std::visit(
         [&] (const auto& command) {
@@ -31,7 +48,11 @@ bool applyCommandsForThisTick(io::CommandsStream& stream, Context& context) {
 }
 
 bool tick(io::CommandsStream& stream, Context& context) {
-    return applyCommandsForThisTick(stream, context);
+    const bool anotherUnitActions = applyUnitMovesForThisTick(context);
+    const bool anotherCommands = applyCommandsForThisTick(stream, context);
+
+    context.units().removeDead();
+    return anotherUnitActions || anotherCommands;
 }
 
 } // namespace

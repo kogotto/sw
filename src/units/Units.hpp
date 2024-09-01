@@ -35,6 +35,12 @@ public:
     }
     Unit& getById(uint32_t id);
     void removeDead();
+
+    auto begin() { return units.begin(); }
+    auto end() { return units.end(); }
+
+    auto begin() const { return units.begin(); }
+    auto end() const { return units.end(); }
 private:
     std::vector<Unit> units;
 };

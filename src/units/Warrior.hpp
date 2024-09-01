@@ -5,6 +5,10 @@
 #include "units/base.hpp"
 
 namespace sw {
+class Context;
+} // namespace sw
+
+namespace sw {
 
 class Warrior : public Base {
 public:
@@ -16,5 +20,7 @@ public:
 
     uint32_t _strength;
 };
+
+bool processUnit(Warrior& unit, Context& context);
 
 } // namespace sw

@@ -5,6 +5,10 @@
 #include "units/base.hpp"
 
 namespace sw {
+class Context;
+} // namespace sw
+
+namespace sw {
 
 class Archer : public Base {
 public:
@@ -20,5 +24,7 @@ public:
     uint32_t _range;
     uint32_t _agility;
 };
+
+bool processUnit(Archer& unit, Context& context);
 
 } // namespace sw
