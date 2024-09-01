@@ -82,6 +82,19 @@ void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
     });
 }
 
+void processMarch(io::March command, Context& context) {
+    // get unit by id
+    // order him to march
+    // get x,y of unit for log
+    context.log(sw::io::MarchStarted{
+        command.unitId,
+        0,
+        0,
+        command.targetX,
+        command.targetY
+    });
+}
+
 void applyCommand(const io::Command& command, Context& context) {
     std::visit(
         Overload{
@@ -94,6 +107,9 @@ void applyCommand(const io::Command& command, Context& context) {
             },
             [&] (const io::SpawnWarrior& command) {
                 processSpawnWarrior(command, context);
+            },
+            [&] (const io::March& command) {
+                processMarch(command, context);
             }
         },
         command
