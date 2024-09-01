@@ -8,8 +8,8 @@ namespace sw::io
 
 		uint32_t unitId {};
 		std::string unitType {};
-		uint32_t x {};
-		uint32_t y {};
+		int x {};
+		int y {};
 
 		template <typename Visitor>
 		void visit(Visitor& visitor)

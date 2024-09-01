@@ -1,12 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
+
+#include "units/Cell.hpp"
 
 namespace sw {
 
 class Base {
 public:
-    Base(uint32_t id, uint32_t hp, uint32_t x, uint32_t y)
+    Base(uint32_t id, uint32_t hp, int x, int y)
         : _id{id}
         , _hp{hp}
         , _x{x}
@@ -17,11 +20,34 @@ public:
         return _hp == 0;
     }
 
+    Cell getPosition() const {
+        return {_x, _y};
+    }
+
+    void applyStep(Cell step) {
+        _x += step.x;
+        _y += step.y;
+    }
+
+    std::optional<Cell> getTargetPosition() const {
+        return targetPosition;
+    }
+
+    void setTargetPosition(int newX, int newY) {
+        targetPosition.emplace(newX, newY);
+    }
+
+    void resetTargetPosition() {
+        targetPosition.reset();
+    }
+
     uint32_t _id;
     uint32_t _hp;
 
-    uint32_t _x;
-    uint32_t _y;
+    int _x;
+    int _y;
+
+    std::optional<Cell> targetPosition{};
 };
 
 } // namespace sw

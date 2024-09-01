@@ -6,8 +6,8 @@ namespace sw::io
 		constexpr static const char* Name = "MARCH_STARTED";
 
 		uint32_t unitId {};
-		uint32_t x {};
-		uint32_t y {};
+		int x {};
+		int y {};
 		uint32_t targetX {};
 		uint32_t targetY {};
 

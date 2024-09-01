@@ -9,8 +9,8 @@
 namespace sw::io {
 
 void processCommand(io::March command, Context& context) {
-    const auto& unit = asBase(context.units().getById(command.unitId));
-    // order him to march
+    auto& unit = asBase(context.units().getById(command.unitId));
+    unit.setTargetPosition(command.targetX, command.targetY);
     context.log(sw::io::MarchStarted{
         command.unitId,
         unit._x,
