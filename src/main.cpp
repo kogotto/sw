@@ -63,13 +63,13 @@ struct Overload : Ts... {
 template <typename... Ts>
 Overload(Ts...) -> Overload<Ts...>;
 
-void processCreateMap(io::CreateMap command, Context& context) {
+void processCommand(io::CreateMap command, Context& context) {
     context.log(
         sw::io::MapCreated{command.width, command.height}
     );
 }
 
-void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
+void processCommand(io::SpawnWarrior command, Context& context) {
     context.units().spawn(
         sw::Warrior{
             command.unitId,
@@ -88,7 +88,7 @@ void processSpawnWarrior(io::SpawnWarrior command, Context& context) {
     });
 }
 
-void processSpawnArcher(io::SpawnArcher command, Context& context) {
+void processCommand(io::SpawnArcher command, Context& context) {
     context.units().spawn(
         sw::Archer{
             command.unitId,
@@ -108,7 +108,7 @@ void processSpawnArcher(io::SpawnArcher command, Context& context) {
     });
 }
 
-void processMarch(io::March command, Context& context) {
+void processCommand(io::March command, Context& context) {
     const auto& unit = asBase(context.units().getById(command.unitId));
     // order him to march
     context.log(sw::io::MarchStarted{
@@ -120,24 +120,15 @@ void processMarch(io::March command, Context& context) {
     });
 }
 
+void processCommand(io::Wait command, Context& context) {
+    // Do nothing
+}
+
 void applyCommand(const io::Command& command, Context& context) {
     std::visit(
         Overload{
             [&] (const auto& command) {
-                std::cout << "    [" << context.getTickNumber() << "] apply command " <<
-                    command << std::endl;
-            },
-            [&] (const io::CreateMap& command) {
-                processCreateMap(command, context);
-            },
-            [&] (const io::SpawnWarrior& command) {
-                processSpawnWarrior(command, context);
-            },
-            [&] (const io::SpawnArcher& command) {
-                processSpawnArcher(command, context);
-            },
-            [&] (const io::March& command) {
-                processMarch(command, context);
+                processCommand(command, context);
             }
         },
         command
