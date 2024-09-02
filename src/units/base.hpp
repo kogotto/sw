@@ -6,6 +6,10 @@
 #include "units/Cell.hpp"
 
 namespace sw {
+class Context;
+} // namespace sw
+
+namespace sw {
 
 class Base {
 public:
@@ -49,5 +53,7 @@ public:
 
     std::optional<Cell> targetPosition{};
 };
+
+bool processMove(Base& unit, Context& context);
 
 } // namespace sw

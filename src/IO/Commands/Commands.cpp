@@ -40,6 +40,8 @@ Commands parseCommands(std::istream& stream) {
     );
     parser.parse(stream);
 
+    result.emplace_back(io::Wait{0});
+
     return result;
 }
 
