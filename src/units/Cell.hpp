@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 namespace sw {
 
 struct Cell {
@@ -40,6 +42,14 @@ inline Cell& operator-=(Cell& lhs, const Cell& rhs) {
 inline Cell operator-(const Cell& lhs, const Cell& rhs) {
     Cell temp{lhs};
     return temp-=rhs;
+}
+
+inline int distance(const Cell& lhs, const Cell& rhs) {
+    Cell delta = rhs - lhs;
+    return std::max(
+        std::abs(delta.x),
+        std::abs(delta.y)
+    );
 }
 
 } // namespace sw

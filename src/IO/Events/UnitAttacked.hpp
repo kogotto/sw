@@ -9,7 +9,7 @@ namespace sw::io
 		uint32_t attackerUnitId {};
 		uint32_t targetUnitId {};
 		uint32_t damage {};
-		uint32_t targetHp {};
+		int targetHp {};
 
 		template <typename Visitor>
 		void visit(Visitor& visitor)

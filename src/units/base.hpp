@@ -13,12 +13,20 @@ namespace sw {
 
 class Base {
 public:
-    Base(uint32_t id, uint32_t hp, int x, int y)
+    Base(uint32_t id, int hp, int x, int y)
         : _id{id}
         , _hp{hp}
         , _x{x}
         , _y{y}
     {}
+
+    void receiveDamage(int damage) {
+        if (damage > _hp) {
+            _hp = 0;
+        } else {
+            _hp -= damage;
+        }
+    }
 
     bool isDead() const {
         return _hp == 0;
@@ -45,13 +53,26 @@ public:
         targetPosition.reset();
     }
 
+    std::optional<uint32_t> getTargetUnitId() const {
+        return targetUnitId;
+    }
+
+    void setTargetUnitId(uint32_t newId) {
+        targetUnitId.emplace(newId);
+    }
+
+    void resetTargetUnitId() {
+        targetUnitId.reset();
+    }
+
     uint32_t _id;
-    uint32_t _hp;
+    int _hp;
 
     int _x;
     int _y;
 
     std::optional<Cell> targetPosition{};
+    std::optional<uint32_t> targetUnitId{};
 };
 
 bool processMove(Base& unit, Context& context);

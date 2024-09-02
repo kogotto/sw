@@ -16,7 +16,7 @@ struct SpawnArcher
     uint32_t unitId {};
     int x {};
     int y {};
-    uint32_t hp {};
+    int hp {};
     uint32_t strength {};
     uint32_t range {};
     uint32_t agility {};

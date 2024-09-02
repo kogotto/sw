@@ -16,8 +16,8 @@ struct SpawnWarrior
     uint32_t unitId {};
     int x {};
     int y {};
-    uint32_t hp {};
-    uint32_t strength {};
+    int hp {};
+    int strength {};
 
     template <typename Visitor>
     void visit(Visitor& visitor)

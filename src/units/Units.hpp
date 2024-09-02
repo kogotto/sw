@@ -30,9 +30,14 @@ inline const Base& asBase(const Unit& unit) {
 
 class Units {
 public:
+    using Raw = std::vector<Unit>;
+    using iterator = Raw::iterator;
+
     void spawn(Unit&& unit) {
         units.push_back(std::move(unit));
     }
+
+    bool contains(uint32_t id);
     Unit& getById(uint32_t id);
     void removeDead();
 

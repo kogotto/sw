@@ -20,19 +20,26 @@ bool isDead(const Unit& unit) {
     );
 }
 
-} // namespace
-
-Unit& Units::getById(uint32_t id) {
-    const auto it = std::find_if(
+auto find(std::vector<Unit>& units, uint32_t id) {
+    return std::find_if(
         units.begin(),
         units.end(),
         [id] (const Unit& unit) {
             return getId(unit) == id;
         }
     );
+}
 
+} // namespace
+
+bool Units::contains(uint32_t id) {
+    auto it = find(units, id);
+    return it != units.end();
+}
+
+Unit& Units::getById(uint32_t id) {
+    auto it = find(units, id);
     assert(it != units.end());
-
     return *it;
 }
 
