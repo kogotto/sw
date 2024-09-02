@@ -8,10 +8,6 @@ bool processRange(Archer& unit, Context& context) {
     return false;
 }
 
-bool processMelee(Archer& unit, Context& context) {
-    return false;
-}
-
 } // namespace
 
 bool processUnit(Archer& unit, Context& context) {

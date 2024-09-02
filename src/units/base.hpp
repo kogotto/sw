@@ -13,11 +13,12 @@ namespace sw {
 
 class Base {
 public:
-    Base(uint32_t id, int hp, int x, int y)
+    Base(uint32_t id, int hp, int x, int y, int strength)
         : _id{id}
         , _hp{hp}
         , _x{x}
         , _y{y}
+        , _strength{strength}
     {}
 
     void receiveDamage(int damage) {
@@ -71,10 +72,13 @@ public:
     int _x;
     int _y;
 
+    int _strength;
+
     std::optional<Cell> targetPosition{};
     std::optional<uint32_t> targetUnitId{};
 };
 
 bool processMove(Base& unit, Context& context);
+bool processMelee(Base& unit, Context& context);
 
 } // namespace sw

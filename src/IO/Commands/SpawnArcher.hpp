@@ -17,7 +17,7 @@ struct SpawnArcher
     int x {};
     int y {};
     int hp {};
-    uint32_t strength {};
+    int strength {};
     uint32_t range {};
     uint32_t agility {};
 
