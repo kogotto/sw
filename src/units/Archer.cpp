@@ -28,6 +28,10 @@ void rangeAttack(Archer& unit, Base& target, Context& context) {
     }
 }
 
+bool inRange(int x, int min, int max) {
+    return (min <= x) && (x <= max);
+}
+
 bool tryAttackPreviousRangeTarget(Archer& unit, uint32_t targetId, Context& context) {
     if (!context.units().contains(targetId)) {
         unit.resetRangeTargetId();
@@ -39,7 +43,7 @@ bool tryAttackPreviousRangeTarget(Archer& unit, uint32_t targetId, Context& cont
         return false;
     }
     if (auto dist = distance(unit.getPosition(), target.getPosition());
-            (2 <= dist) && (dist <= unit._range)) {
+            !inRange(dist, 2, unit._range)) {
         unit.resetRangeTargetId();
         return false;
     }
