@@ -39,6 +39,9 @@ public:
 
     bool contains(uint32_t id);
     Unit& getById(uint32_t id);
+
+    std::vector<iterator> unitsInRange(Cell position, int min, int max);
+
     void removeDead();
 
     auto begin() { return units.begin(); }

@@ -65,23 +65,8 @@ bool tryAttackPreviousTarget(Base& unit, uint32_t targetId, Context& context) {
 
 using Iter = Units::iterator;
 
-// [min, max)
-std::vector<Iter> unitsInRange(Units& units, Cell position, int min, int max) {
-    std::vector<Iter> result;
-
-    for (auto it = units.begin(); it != units.end(); ++it) {
-        auto& current = asBase(*it);
-        const int dist = distance(current.getPosition(), position);
-        if (min <= dist && dist < max) {
-            result.push_back(it);
-        }
-    }
-
-    return result;
-}
-
 std::optional<Iter> selectMeleeTarget(Cell position, Units& units) {
-    auto candidates = unitsInRange(units, position, 1, 2);
+    auto candidates = units.unitsInRange(position, 1, 2);
     if (candidates.empty()) {
         return std::nullopt;
     }
@@ -127,7 +112,9 @@ bool processMove(Base& unit, Context& context) {
 
 bool processMelee(Base& unit, Context& context) {
     if (auto targetUnitId = unit.getTargetUnitId(); targetUnitId) {
-        return tryAttackPreviousTarget(unit, *targetUnitId, context);
+        if (tryAttackPreviousTarget(unit, *targetUnitId, context)) {
+            return true;
+        }
     }
     if (auto targetUnitIt = selectMeleeTarget(unit.getPosition(), context.units()); targetUnitIt) {
         Base& target = asBase(**targetUnitIt);

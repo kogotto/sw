@@ -43,6 +43,20 @@ Unit& Units::getById(uint32_t id) {
     return *it;
 }
 
+auto Units::unitsInRange(Cell position, int min, int max) -> std::vector<iterator> {
+    std::vector<iterator> result;
+
+    for (auto it = units.begin(); it != units.end(); ++it) {
+        auto& current = asBase(*it);
+        const int dist = distance(current.getPosition(), position);
+        if (min <= dist && dist < max) {
+            result.push_back(it);
+        }
+    }
+
+    return result;
+}
+
 void Units::removeDead() {
     units.erase(
         std::remove_if(

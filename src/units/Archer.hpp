@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 
 #include "units/base.hpp"
 
@@ -19,8 +20,22 @@ public:
         , _agility{agility}
     {}
 
+    std::optional<uint32_t> getRangeTargetId() const {
+        return rangeTargetId;
+    }
+
+    void setRangeTargetId(uint32_t newId) {
+        rangeTargetId.emplace(newId);
+    }
+
+    void resetRangeTargetId() {
+        rangeTargetId.reset();
+    }
+
     uint32_t _range;
     uint32_t _agility;
+
+    std::optional<uint32_t> rangeTargetId{};
 };
 
 bool processUnit(Archer& unit, Context& context);
