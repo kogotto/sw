@@ -32,13 +32,13 @@ Cell getStep(Cell start, Cell finish) {
     };
 }
 
-void attack(uint32_t attackerId, int damage, Base& target, Context& context) {
-    target.receiveDamage(damage);
+void attack(Base& unit, Base& target, Context& context) {
+    target.receiveDamage(unit._strength);
 
     context.log(io::UnitAttacked{
-        attackerId,
+        unit._id,
         target._id,
-        static_cast<uint32_t>(damage),
+        static_cast<uint32_t>(unit._strength),
         target._hp
     });
     if (target.isDead()) {
@@ -48,24 +48,19 @@ void attack(uint32_t attackerId, int damage, Base& target, Context& context) {
     }
 }
 
-bool tryAttackPreviousTarget(Base& unit, uint32_t targetId, Context& context) {
-    if (!context.units().contains(targetId)) {
-        unit.resetTargetUnitId();
-        return false;
+bool isRotten(uint32_t id, Units& units) {
+    if (!units.contains(id)) {
+        return true;
     }
-    Base& target = asBase(context.units().getById(targetId));
-    if (target.isDead()) {
-        unit.resetTargetUnitId();
-        return false;
+    Base& unit = asBase(units.getById(id));
+    if (unit.isDead()) {
+        return true;
     }
 
-    attack(unit._id, unit._strength, target, context);
-    return true;
+    return false;
 }
 
-using Iter = Units::iterator;
-
-std::optional<Iter> selectMeleeTarget(Cell position, Units& units) {
+std::optional<uint32_t> selectNewMeleeTarget(Cell position, Units& units) {
     auto candidates = units.unitsInRange(position, 1, 2);
     if (candidates.empty()) {
         return std::nullopt;
@@ -73,7 +68,7 @@ std::optional<Iter> selectMeleeTarget(Cell position, Units& units) {
     const auto it = std::min_element(
         candidates.begin(),
         candidates.end(),
-        [] (Iter lhsIt, Iter rhsIt) {
+        [] (auto lhsIt, auto rhsIt) {
             const Base& lhs = asBase(*lhsIt);
             const Base& rhs = asBase(*rhsIt);
             return std::tie(lhs._hp, lhs._id) < std::tie(rhs._hp, rhs._id);
@@ -82,7 +77,16 @@ std::optional<Iter> selectMeleeTarget(Cell position, Units& units) {
     if (it == candidates.end()) {
         return std::nullopt;
     }
-    return *it;
+    return asBase(**it)._id;
+}
+
+std::optional<uint32_t> selectMeleeTarget(Base& unit, Units& units) {
+    const auto prevTargetId = unit.getTargetUnitId();
+    if (prevTargetId && !isRotten(*prevTargetId, units)) {
+        return prevTargetId;
+    }
+    unit.resetTargetUnitId();
+    return selectNewMeleeTarget(unit.getPosition(), units);
 }
 
 } // namespace
@@ -111,18 +115,15 @@ bool processMove(Base& unit, Context& context) {
 }
 
 bool processMelee(Base& unit, Context& context) {
-    if (auto targetUnitId = unit.getTargetUnitId(); targetUnitId) {
-        if (tryAttackPreviousTarget(unit, *targetUnitId, context)) {
-            return true;
-        }
+    const auto targetId = selectMeleeTarget(unit, context.units());
+    if (!targetId) {
+        return false;
     }
-    if (auto targetUnitIt = selectMeleeTarget(unit.getPosition(), context.units()); targetUnitIt) {
-        Base& target = asBase(**targetUnitIt);
-        unit.setTargetUnitId(target._id);
-        attack(unit._id, unit._strength, target, context);
-        return true;
-    }
-    return false;
+
+    Base& target = asBase(context.units().getById(*targetId));
+    unit.setTargetUnitId(*targetId);
+    attack(unit, target, context);
+    return true;
 }
 
 } // namespace sw
