@@ -93,16 +93,9 @@ bool processRange(Archer& unit, Context& context) {
 } // namespace
 
 bool processUnit(Archer& unit, Context& context) {
-    if (processRange(unit, context)) {
-        return true;
-    }
-    if (processMelee(unit, context)) {
-        return true;
-    }
-    if (processMove(unit, context)) {
-        return true;
-    }
-    return false;
+    return processRange(unit, context) ||
+           processMelee(unit, context) ||
+           processMove(unit, context);
 }
 
 } // namespace sw

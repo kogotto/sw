@@ -3,13 +3,8 @@
 namespace sw {
 
 bool processUnit(Warrior& unit, Context& context) {
-    if (processMelee(unit, context)) {
-        return true;
-    }
-    if (processMove(unit, context)) {
-        return true;
-    }
-    return false;
+    return processMelee(unit, context) ||
+           processMove(unit, context);
 }
 
 } // namespace sw
