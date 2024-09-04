@@ -32,29 +32,22 @@ bool inRange(int x, int min, int max) {
     return (min <= x) && (x <= max);
 }
 
-bool tryAttackPreviousRangeTarget(Archer& unit, uint32_t targetId, Context& context) {
-    if (!context.units().contains(targetId)) {
-        unit.resetRangeTargetId();
-        return false;
+bool isRotten(uint32_t id, Archer& archer, Units& units) {
+    if (!units.contains(id)) {
+        return true;
     }
-    Base& target = asBase(context.units().getById(targetId));
-    if (target.isDead()) {
-        unit.resetRangeTargetId();
-        return false;
+    Base& unit = asBase(units.getById(id));
+    if (unit.isDead()) {
+        return true;
     }
-    if (auto dist = distance(unit.getPosition(), target.getPosition());
-            !inRange(dist, 2, unit._range)) {
-        unit.resetRangeTargetId();
-        return false;
+    if (auto dist = distance(unit.getPosition(), archer.getPosition());
+            !inRange(dist, 2, archer._range)) {
+        return true;
     }
-
-    rangeAttack(unit, target, context);
-    return true;
+    return false;
 }
 
-using Iter = Units::iterator;
-
-std::optional<Iter> selectRangeTarget(Archer& unit, Units& units) {
+std::optional<uint32_t> selectNewRangeTarget(Archer& unit, Units& units) {
     auto candidates = units.unitsInRange(unit.getPosition(), 2, unit._range + 1);
     if (candidates.empty()) {
         return std::nullopt;
@@ -62,7 +55,7 @@ std::optional<Iter> selectRangeTarget(Archer& unit, Units& units) {
     const auto it = std::min_element(
         candidates.begin(),
         candidates.end(),
-        [&unit] (Iter lhsIt, Iter rhsIt) {
+        [&unit] (auto lhsIt, auto rhsIt) {
             const Base& lhs = asBase(*lhsIt);
             const int lhsDist = distance(lhs.getPosition(), unit.getPosition());
             const Base& rhs = asBase(*rhsIt);
@@ -74,22 +67,27 @@ std::optional<Iter> selectRangeTarget(Archer& unit, Units& units) {
     if (it == candidates.end()) {
         return std::nullopt;
     }
-    return *it;
+    return asBase(**it)._id;
+}
+
+std::optional<uint32_t> selectRangeTarget(Archer& unit, Units& units) {
+    const auto prevTargetId = unit.getRangeTargetId();
+    if (prevTargetId && !isRotten(*prevTargetId, unit, units)) {
+        return prevTargetId;
+    }
+    unit.resetRangeTargetId();
+    return selectNewRangeTarget(unit, units);
 }
 
 bool processRange(Archer& unit, Context& context) {
-    if (auto rangeTargetId = unit.getRangeTargetId(); rangeTargetId) {
-        if (tryAttackPreviousRangeTarget(unit, *rangeTargetId, context)) {
-            return true;
-        }
+    const auto rangeTargetId = selectRangeTarget(unit, context.units());
+    if (!rangeTargetId) {
+        return false;
     }
-    if (auto targetIt = selectRangeTarget(unit, context.units()); targetIt) {
-        Base& target = asBase(**targetIt);
-        unit.setRangeTargetId(target._id);
-        rangeAttack(unit, target, context);
-        return true;
-    }
-    return false;
+    Base& target = asBase(context.units().getById(*rangeTargetId));
+    unit.setRangeTargetId(target._id);
+    rangeAttack(unit, target, context);
+    return true;
 }
 
 } // namespace
